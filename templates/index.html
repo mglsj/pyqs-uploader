@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Upload PDF to GitHub</title>
+        <title>Upload PYQs</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <meta
             name="viewport"
@@ -124,7 +124,7 @@
                         type="text"
                         id="subjectCode"
                         name="exam_subject_code"
-                        placeholder="eg tcs101, bba101"
+                        placeholder="eg tcs101, tbc101, bba101, mb101"
                         pattern="^[a-zA-Z0-9]*$"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         required
@@ -132,7 +132,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700"
-                    >Specialization Code</label>
+                    >Specialization Code (If Any)</label>
                     <input
                         type="text"
                         id="specializationCode"
@@ -196,7 +196,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700"
-                        >Exam Month</label>
+                        >Exam Month (If known)</label>
                         <select
                             id="examMonth"
                             name="exam_month"
@@ -222,7 +222,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700"
-                        >Exam Date</label>
+                        >Exam Date (If known)</label>
                         <input
                             type="date"
                             id="examDate"
@@ -234,7 +234,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700"
-                    >Set</label>
+                    >Set (If Any)</label>
                     <input
                         type="text"
                         id="examSet"
@@ -244,7 +244,7 @@
                 </div>
                 <div class="mt-4 text-center">
                     <p class="text-sm font-medium text-gray-700">
-                        Generated Filename:
+                        Filename (Auto-generated):
                     </p>
                     <input
                         type="text"
