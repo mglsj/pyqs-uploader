@@ -101,6 +101,48 @@
             function showSpinner() {
                 document.getElementById("spinnerOverlay").style.display = "flex";
             }
+
+            function onFileUpload() {
+                const file = document.getElementById("file-input").files[0];
+                console.log(file);
+
+                const file_name_pattern =
+                    "^(?<subject_code>[a-zA-Z0-9]+)_(?:(?<specialization_code>[a-zA-Z0-9]+)_)?(?<type>(?:midsem)|(?:endsem))_(?:(?<back>back)_)?(?<year>20[0-9]{2})(?:_(?<month>(?:jan)|(?:feb)|(?:mar)|(?:apr)|(?:may)|(?:jun)|(?:jul)|(?:aug)|(?:sep)|(?:oct)|(?:nov)|(?:dec)))?(?:_(?<date>[0-9]{1,2}))?(?:_set(?<set>[a-zA-Z0-9]+))?.pdf$";
+
+                const file_name_regex = new RegExp(file_name_pattern);
+                const match = file.name.match(file_name_regex);
+                console.log(match);
+                if (match) {
+                    const subjectCode = match.groups.subject_code;
+                    const specializationCode = match.groups.specialization_code || "";
+                    const examType = match.groups.type;
+                    const backExam = match.groups.back || "";
+                    const examYear = match.groups.year;
+                    const examMonth = match.groups.month || "";
+                    const examDate = match.groups.date || "";
+                    const examSet = match.groups.set || "";
+
+                    document.getElementById("subjectCode").value = subjectCode
+                        .toLowerCase();
+                    document.getElementById("specializationCode").value =
+                        specializationCode;
+                    document.querySelector(
+                        `input[name="exam_type"][value="${examType}"]`,
+                    ).checked = true;
+                    document.getElementById("backExam").checked = backExam === "back";
+                    document.getElementById("examYear").value = examYear;
+                    if (examMonth) {
+                        document.getElementById("examMonth").value = examMonth;
+                    }
+                    if (examDate) {
+                        document.getElementById("examDate").value =
+                            `${examYear}-${examMonth}-${examDate}`;
+                    }
+                    document.getElementById("examSet").value = examSet;
+
+                    updateFilename();
+                }
+            }
         </script>
     </head>
     <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
@@ -117,6 +159,19 @@
                 oninput="updateFilename()"
                 onsubmit="showSpinner()"
             >
+                <div>
+                    <label class="block text-sm font-medium text-gray-700"
+                    >Upload PDF*</label>
+                    <input
+                        type="file"
+                        id="file-input"
+                        name="file"
+                        accept=".pdf"
+                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                        onchange="onFileUpload()"
+                        required
+                    />
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700"
                     >Subject Code *</label>
@@ -283,17 +338,6 @@
                         }
                         document.getElementById("path").value = path;
                     </script>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700"
-                    >Upload PDF*</label>
-                    <input
-                        type="file"
-                        name="file"
-                        accept=".pdf"
-                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                        required
-                    />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700"

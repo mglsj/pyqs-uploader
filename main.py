@@ -65,6 +65,9 @@ def upload_file():
             path = path.strip("/").replace("pyqs/", "")
             file_path = f"{path}/{file_name}"
 
+        else:
+            return "Please provide a valid path."
+
         # GitHub actions
         try:
             access_token = get_installation_access_token()
