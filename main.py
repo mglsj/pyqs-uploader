@@ -4,9 +4,11 @@ import jwt
 import time
 import requests
 from flask import Flask, request, render_template
-from dotenv import load_dotenv
 
-load_dotenv()
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+
+    load_dotenv(override=True)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -72,14 +74,14 @@ def upload_file():
         try:
             access_token = get_installation_access_token()
 
-            print("Getting the latest commit SHA")
+            # print("Getting the latest commit SHA")
             # Step 1: Get the latest commit SHA
             ref_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/refs/heads/{BASE_BRANCH}"
             headers = {"Authorization": f"token {access_token}"}
             ref_response = requests.get(ref_url, headers=headers)
             base_commit_sha = ref_response.json()["object"]["sha"]
 
-            print("Creating a new branch")
+            # print("Creating a new branch")
             # Step 2: Create a new branch
             new_branch = f"upload-{int(time.time())}"
             create_branch_url = (
@@ -91,7 +93,7 @@ def upload_file():
                 json={"ref": f"refs/heads/{new_branch}", "sha": base_commit_sha},
             )
 
-            print("Uploading the file")
+            # print("Uploading the file")
             # Step 3: Upload the file
             # file_path = f"uploads/{file_name}"
             upload_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{requests.utils.quote(file_path)}"
@@ -105,7 +107,7 @@ def upload_file():
                 },
             )
 
-            print("Creating a pull request")
+            # print("Creating a pull request")
             # Step 4: Create a pull request
             pr_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/pulls"
             pr_body = f"""
@@ -134,7 +136,7 @@ This is an autogenrated PR to add a new file to the repository.
 - Course: `{request.form["contributor_course"]}`
 - Batch: `{request.form["contributor_batch"]}`
 """
-            print("body", pr_body)
+            # print("body", pr_body)
             pr_response = requests.post(
                 pr_url,
                 headers=headers,
@@ -148,7 +150,8 @@ This is an autogenrated PR to add a new file to the repository.
             pr_data = pr_response.json()
             return render_template("success.html", pull_request_url=pr_data["html_url"])
         except Exception as e:
-            print(e)
+            # raise e
+            # print(e)
             return f"Error: {str(e)}"
 
     return render_template("index.html")
