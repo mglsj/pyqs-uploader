@@ -1,1 +1,12 @@
 # PYQ Uploader
+
+env vars
+
+```
+BASE_URL=
+REPO_OWNER=
+REPO_NAME=
+BASE_BRANCH=
+APP_ID=
+PRIVATE_KEY=
+```

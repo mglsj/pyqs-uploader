@@ -3,3 +3,15 @@ name = "pyqs-uploader"
 compatibility_date = "2024-12-18"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
+
+[vars]
+BASE_URL= "http://127.0.0.1:8788"
+REPO_OWNER= "gehuhaldwani"
+REPO_NAME= "dummy"
+BASE_BRANCH= "main"
+
+[env.production.vars]
+BASE_URL= "https://pyqs-uploader.pages.dev"
+REPO_OWNER= "gehuhaldwani"
+REPO_NAME= "pyqs"
+BASE_BRANCH= "main"
