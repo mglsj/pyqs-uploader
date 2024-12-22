@@ -1,0 +1,24 @@
+---
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Success">
+	<div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+		<h1 class="text-2xl font-bold mb-6 text-center">
+			Thanks for Contribuing
+		</h1>
+		<p class="text-center">Your pyqs has been submitted successfully.</p>
+		<p class="text-center">
+			View pull request on github <a
+				id="github-link"
+				class="text-blue-500 hover:underline">here</a
+			>.
+		</p>
+	</div>
+</Layout>
+
+<script>
+	const urlParams = new URLSearchParams(window.location.search);
+	let path = urlParams.get("pr_url");
+	(document.getElementById("github-link") as HTMLAnchorElement).href = path;
+</script>

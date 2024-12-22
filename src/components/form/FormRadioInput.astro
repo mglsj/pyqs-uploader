@@ -1,0 +1,33 @@
+---
+type Value = {
+	label: string;
+	value: string;
+};
+
+interface Props {
+	label: string;
+	name: string;
+	values: Value[];
+}
+
+const { label, name, values } = Astro.props;
+---
+
+<div>
+	<label class="block text-sm font-medium text-gray-700">{label}</label>
+	<div class="mt-1 flex items-center space-x-4">
+		{
+			values.map((value: Value) => (
+				<label class="flex items-center">
+					<input
+						type="radio"
+						name={name}
+						value={value.value}
+						class="form-radio"
+					/>
+					<span class="ml-2">{value.label}</span>
+				</label>
+			))
+		}
+	</div>
+</div>

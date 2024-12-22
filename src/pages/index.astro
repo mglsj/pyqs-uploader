@@ -1,0 +1,301 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+import FormTextInput from "@/components/form/FormTextInput.astro";
+import FormRadioInput from "@/components/form/FormRadioInput.astro";
+import FormCheckboxInput from "@/components/form/FormCheckboxInput.astro";
+import FormNumberInput from "@/components/form/FormNumberInput.astro";
+import FormDropdown from "@/components/form/FormDropdown.astro";
+import FormFileInput from "@/components/form/FormFileInput.astro";
+import FormReadonlyInput from "@/components/form/FormReadonlyInput.astro";
+import Card from "@/components/Card.astro";
+---
+
+<Layout title="Upload PYQs">
+	<div class="spinner-overlay" id="spinnerOverlay">
+		<div class="spinner"></div>
+	</div>
+	<div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+		<h1 class="text-2xl font-bold mb-6 text-center">Upload PYQs PDF</h1>
+		<form
+			id="pyqForm"
+			method="POST"
+			action="/api/submit"
+			enctype="multipart/form-data"
+			class="flex flex-col space-y-4"
+			oninput="updateFilename()"
+			onsubmit="showSpinner()"
+		>
+			<FormReadonlyInput
+				label="PYQ will be uploaded to this path:"
+				id="path"
+				name="path"
+				value=""
+			/>
+			<FormFileInput
+				label="Upload PDF*"
+				id="file-input"
+				name="file"
+				accept=".pdf"
+				onchange="onFileUpload()"
+				required={true}
+			/>
+			<FormTextInput
+				label="Subject Code *"
+				id="subjectCode"
+				name="exam_subject_code"
+				placeholder="eg tcs101, tbc101, bba101, mb101"
+				pattern="^[a-zA-Z0-9]*$"
+				required={true}
+			/>
+			<FormTextInput
+				label="Specialization Code (If Any)"
+				id="specializationCode"
+				name="exam_specialization_code"
+				placeholder="eg F1, M1"
+				pattern="^[a-zA-Z0-9]*$"
+				required={false}
+			/>
+			<FormRadioInput
+				label="Exam Type *"
+				name="exam_type"
+				values={[
+					{ label: "Mid Sem", value: "midsem" },
+					{ label: "End Sem", value: "endsem" },
+				]}
+			/>
+			<FormCheckboxInput
+				label="Back exam?"
+				id="backExam"
+				name="back"
+				checked={false}
+			/>
+			<FormTextInput
+				label="Set (If Any)"
+				id="examSet"
+				name="exam_set"
+				placeholder="eg A, B, C, D"
+			/>
+			<Card>
+				<FormNumberInput
+					label="Exam Year *"
+					id="examYear"
+					name="exam_year"
+					value=`${new Date().getFullYear()}`
+					min={2000}
+					max={2099}
+					step={1}
+					required={true}
+				/>
+				<FormDropdown
+					label="Exam Month (If known)"
+					id="examMonth"
+					name="exam_month"
+					options={[
+						{ label: "None", value: "" },
+						{ label: "January", value: "jan" },
+						{ label: "February", value: "feb" },
+						{ label: "March", value: "mar" },
+						{ label: "April", value: "apr" },
+						{ label: "May", value: "may" },
+						{ label: "June", value: "jun" },
+						{ label: "July", value: "jul" },
+						{ label: "August", value: "aug" },
+						{ label: "September", value: "sep" },
+						{ label: "October", value: "oct" },
+						{ label: "November", value: "nov" },
+						{ label: "December", value: "dec" },
+					]}
+				/>
+				<div class="mt-4 text-center">
+					<p class="text-sm font-medium text-gray-700">OR</p>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700"
+						>Exam Date (If known)</label
+					>
+					<input
+						type="date"
+						id="examDate"
+						name="exam_date"
+						class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+						oninput="updateDate()"
+					/>
+				</div>
+			</Card>
+
+			<FormReadonlyInput
+				label="Filename (Auto-generated):"
+				id="generatedFilename"
+				name="filename"
+				value="file.pdf"
+			/>
+
+			<Card>
+				<label
+					class="text-center block text-sm font-medium text-gray-700"
+					>Optional (For credits)</label
+				>
+				<FormTextInput
+					label="Contributor Name"
+					id="contributorName"
+					name="contributor_name"
+					placeholder="Name"
+				/>
+				<FormTextInput
+					label="Contributor Course"
+					id="contributorCourse"
+					name="contributor_course"
+					placeholder="Course (eg BBA, BCA)"
+				/>
+				<FormNumberInput
+					label="Contributor Batch"
+					id="contributorBatch"
+					name="contributor_batch"
+					placeholder="Passout Batch (eg 2026)"
+					min={2000}
+					max={2099}
+					step={1}
+				/>
+			</Card>
+			<div>
+				<input
+					type="submit"
+					name="pdf"
+					value="Upload"
+					class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+				/>
+			</div>
+			<div>
+				<button
+					type="button"
+					class="w-full bg-red-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+					onclick="document.getElementById('pyqForm').reset(); updateFilename();"
+				>
+					Clear
+				</button>
+			</div>
+		</form>
+	</div>
+</Layout>
+
+<script lang="js">
+	const urlParams = new URLSearchParams(window.location.search);
+	let path = urlParams.get("path");
+	if (path) {
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
+		if (path.endsWith("/")) {
+			path = path.substring(0, path.length - 1);
+		}
+		if (!path.startsWith("pyqs/")) {
+			path = null;
+		}
+	}
+	document.getElementById("path").value = path;
+
+	function updateDate() {
+		const examDate = document.getElementById("examDate").value || null;
+		if (examDate) {
+			const date = new Date(examDate);
+			document.getElementById("examYear").value = `${date.getFullYear()}`;
+			document.getElementById("examMonth").selectedIndex =
+				date.getMonth() + 1;
+		}
+	}
+
+	function updateFilename() {
+		const subjectCode =
+			document.getElementById("subjectCode").value || null;
+		const specializationCode =
+			document.getElementById("specializationCode").value || null;
+		const examType =
+			document.querySelector('input[name="exam_type"]:checked').value ||
+			null;
+		const backExam = document.getElementById("backExam").checked
+			? "back"
+			: null;
+		const examYear = document.getElementById("examYear").value || null;
+		const examMonth = document.getElementById("examMonth").value || null;
+		const examDate = document.getElementById("examDate").value || null;
+		const examSet = document.getElementById("examSet").value || null;
+
+		let filename = "";
+		if (subjectCode) {
+			filename += subjectCode.toLowerCase();
+		}
+		if (specializationCode) {
+			filename += `_${specializationCode.toUpperCase()}`;
+		}
+		filename += `_${examType}`;
+		if (backExam) {
+			filename += `_${backExam}`;
+		}
+		if (examDate) {
+			dateTime = new Date(examDate);
+
+			// YYYY_MMM_DD
+			filename += `_${dateTime.getFullYear()}_${dateTime
+				.toLocaleString("default", { month: "short" })
+				.toLowerCase()}_${dateTime.getDate()}`;
+		} else {
+			filename += `_${examYear}`;
+			if (examMonth) {
+				filename += `_${examMonth}`;
+			}
+		}
+		if (examSet) {
+			filename += `_set${examSet.toUpperCase()}`;
+		}
+		filename += ".pdf";
+
+		document.getElementById("generatedFilename").value = filename;
+	}
+
+	function showSpinner() {
+		document.getElementById("spinnerOverlay").style.display = "flex";
+	}
+
+	function onFileUpload() {
+		const file = document.getElementById("file-input").files[0];
+		console.log(file);
+
+		const file_name_pattern =
+			"^(?<subject_code>[a-zA-Z0-9]+)_(?:(?<specialization_code>[a-zA-Z0-9]+)_)?(?<type>(?:midsem)|(?:endsem))_(?:(?<back>back)_)?(?<year>20[0-9]{2})(?:_(?<month>(?:jan)|(?:feb)|(?:mar)|(?:apr)|(?:may)|(?:jun)|(?:jul)|(?:aug)|(?:sep)|(?:oct)|(?:nov)|(?:dec)))?(?:_(?<date>[0-9]{1,2}))?(?:_set(?<set>[a-zA-Z0-9]+))?.pdf$";
+
+		const file_name_regex = new RegExp(file_name_pattern);
+		const match = file.name.match(file_name_regex);
+		console.log(match);
+		if (match) {
+			const subjectCode = match.groups.subject_code;
+			const specializationCode = match.groups.specialization_code || "";
+			const examType = match.groups.type;
+			const backExam = match.groups.back || "";
+			const examYear = match.groups.year;
+			const examMonth = match.groups.month || "";
+			const examDate = match.groups.date || "";
+			const examSet = match.groups.set || "";
+
+			document.getElementById("subjectCode").value =
+				subjectCode.toLowerCase();
+			document.getElementById("specializationCode").value =
+				specializationCode;
+			document.querySelector(
+				`input[name="exam_type"][value="${examType}"]`,
+			).checked = true;
+			document.getElementById("backExam").checked = backExam === "back";
+			document.getElementById("examYear").value = examYear;
+			if (examMonth) {
+				document.getElementById("examMonth").value = examMonth;
+			}
+			if (examDate) {
+				document.getElementById("examDate").value =
+					`${examYear}-${examMonth}-${examDate}`;
+			}
+			document.getElementById("examSet").value = examSet;
+
+			updateFilename();
+		}
+	}
+</script>
