@@ -90,7 +90,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 	const fileContent = await uploaded_file.arrayBuffer();
 	const encodedContent = Buffer.from(fileContent).toString("base64");
 
-	const path = formData.get("path") as string;
+	const path: string = formData.get("path") as string;
 
 	if (!path.startsWith("pyqs/")) {
 		return new Response("Invalid path", {
@@ -155,7 +155,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 					"User-Agent": "GitHub API Client for Cloudflare Workers",
 				},
 				body: JSON.stringify({
-					message: `Upload ${uploaded_file.name}`,
+					message: `[PYQ Uploader] ${formData.get("filename")}`,
 					content: encodedContent,
 					branch: newBranchName,
 				}),
@@ -166,6 +166,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 		const prBody = `
 This is an autogenrated PR to add a new file to the repository.
 
+- Original: \`${uploaded_file.name}\`
 - File: \`${formData.get("filename") as string}\`
 - Path: \`${file_path}\`
 
@@ -200,7 +201,7 @@ This is an autogenrated PR to add a new file to the repository.
 					"User-Agent": "GitHub API Client for Cloudflare Workers",
 				},
 				body: JSON.stringify({
-					title: `Upload ${uploaded_file.name}`,
+					title: `[PYQ Uploader] ${formData.get("filename")}`,
 					head: newBranchName,
 					body: prBody,
 					base: context.env.BASE_BRANCH,
