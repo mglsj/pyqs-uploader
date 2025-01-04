@@ -23,8 +23,6 @@ import Card from "@/components/Card.astro";
 			action="/api/submit"
 			enctype="multipart/form-data"
 			class="flex flex-col space-y-4"
-			oninput="updateFilename()"
-			onsubmit="onFormSubmit()"
 		>
 			<FormReadonlyInput
 				label="PYQ will be uploaded to this path:"
@@ -37,9 +35,9 @@ import Card from "@/components/Card.astro";
 				id="file-input"
 				name="file"
 				accept=".pdf"
-				onchange="onFileUpload()"
 				required={true}
 			/>
+			<canvas id="pdfPreview" style="display: none;"></canvas>
 			<FormTextInput
 				label="Subject Code *"
 				id="subjectCode"
@@ -119,7 +117,6 @@ import Card from "@/components/Card.astro";
 						id="examDate"
 						name="exam_date"
 						class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-						oninput="updateDate()"
 					/>
 				</div>
 			</Card>
@@ -179,47 +176,84 @@ import Card from "@/components/Card.astro";
 	</div>
 </Layout>
 
-<script lang="js">
-	const urlParams = new URLSearchParams(window.location.search);
-	let path = urlParams.get("path");
-	if (path) {
-		if (path.startsWith("/")) {
-			path = path.substring(1);
+<script>
+	function loadPath() {
+		const urlParams = new URLSearchParams(window.location.search);
+		let path = urlParams.get("path");
+		if (path) {
+			if (path.startsWith("/")) {
+				path = path.substring(1);
+			}
+			if (path.endsWith("/")) {
+				path = path.substring(0, path.length - 1);
+			}
+			if (!path.startsWith("pyqs/")) {
+				path = null;
+			}
 		}
-		if (path.endsWith("/")) {
-			path = path.substring(0, path.length - 1);
-		}
-		if (!path.startsWith("pyqs/")) {
-			path = null;
+
+		if (path) {
+			(document.getElementById("path") as HTMLInputElement).value = path;
 		}
 	}
-	document.getElementById("path").value = path;
+
+	window.addEventListener("load", () => {
+		loadPath();
+		updateDate();
+		onFileUpload();
+	});
 
 	function updateDate() {
-		const examDate = document.getElementById("examDate").value || null;
+		const examDate =
+			(document.getElementById("examDate") as HTMLInputElement).value ||
+			null;
 		if (examDate) {
 			const date = new Date(examDate);
-			document.getElementById("examYear").value = `${date.getFullYear()}`;
-			document.getElementById("examMonth").selectedIndex =
-				date.getMonth() + 1;
+			(document.getElementById("examYear") as HTMLInputElement).value =
+				`${date.getFullYear()}`;
+			(
+				document.getElementById(
+					"examMonth",
+				) as unknown as HTMLSelectElement
+			).selectedIndex = date.getMonth() + 1;
 		}
 	}
+
+	(document.getElementById("examDate") as HTMLInputElement).addEventListener(
+		"input",
+		updateDate,
+	);
 
 	function updateFilename() {
 		const subjectCode =
-			document.getElementById("subjectCode").value || null;
+			(document.getElementById("subjectCode") as HTMLInputElement)
+				.value || null;
 		const specializationCode =
-			document.getElementById("specializationCode").value || null;
+			(document.getElementById("specializationCode") as HTMLInputElement)
+				.value || null;
 		const examType =
-			document.querySelector('input[name="exam_type"]:checked').value ||
-			null;
-		const backExam = document.getElementById("backExam").checked
+			(
+				document.querySelector(
+					'input[name="exam_type"]:checked',
+				) as HTMLInputElement
+			).value || null;
+		const backExam = (
+			document.getElementById("backExam") as HTMLInputElement
+		).checked
 			? "back"
 			: null;
-		const examYear = document.getElementById("examYear").value || null;
-		const examMonth = document.getElementById("examMonth").value || null;
-		const examDate = document.getElementById("examDate").value || null;
-		const examSet = document.getElementById("examSet").value || null;
+		const examYear =
+			(document.getElementById("examYear") as HTMLInputElement).value ||
+			null;
+		const examMonth =
+			(document.getElementById("examMonth") as HTMLInputElement).value ||
+			null;
+		const examDate =
+			(document.getElementById("examDate") as HTMLInputElement).value ||
+			null;
+		const examSet =
+			(document.getElementById("examSet") as HTMLInputElement).value ||
+			null;
 
 		let filename = "";
 		if (subjectCode) {
@@ -233,7 +267,7 @@ import Card from "@/components/Card.astro";
 			filename += `_${backExam}`;
 		}
 		if (examDate) {
-			dateTime = new Date(examDate);
+			let dateTime = new Date(examDate);
 
 			// YYYY_MMM_DD
 			filename += `_${dateTime.getFullYear()}_${dateTime
@@ -250,30 +284,41 @@ import Card from "@/components/Card.astro";
 		}
 		filename += ".pdf";
 
-		document.getElementById("generatedFilename").value = filename;
+		(
+			document.getElementById("generatedFilename") as HTMLInputElement
+		).value = filename;
 	}
 
+	(document.getElementById("pyqForm") as HTMLFormElement).addEventListener(
+		"input",
+		updateFilename,
+	);
+
 	function showSpinner() {
-		document.getElementById("spinnerOverlay").style.display = "flex";
+		(
+			document.getElementById("spinnerOverlay") as HTMLDivElement
+		).style.display = "flex";
 	}
 
 	function onFormSubmit() {
+		console.log("Form submitted");
 		showSpinner();
 		updateFilename();
 		return true;
 	}
 
-	function onFileUpload() {
-		const file = document.getElementById("file-input").files[0];
-		console.log(file);
+	(document.getElementById("pyqForm") as HTMLFormElement).addEventListener(
+		"submit",
+		onFormSubmit,
+	);
 
+	function uploadedFileFilename(file_name: string) {
 		const file_name_pattern =
 			"^(?<subject_code>[a-zA-Z0-9]+)_(?:(?<specialization_code>[a-zA-Z0-9]+)_)?(?<type>(?:midsem)|(?:endsem))_(?:(?<back>back)_)?(?<year>20[0-9]{2})(?:_(?<month>(?:jan)|(?:feb)|(?:mar)|(?:apr)|(?:may)|(?:jun)|(?:jul)|(?:aug)|(?:sep)|(?:oct)|(?:nov)|(?:dec)))?(?:_(?<date>[0-9]{1,2}))?(?:_set(?<set>[a-zA-Z0-9]+))?.pdf$";
 
 		const file_name_regex = new RegExp(file_name_pattern);
-		const match = file.name.match(file_name_regex);
-		console.log(match);
-		if (match) {
+		const match = file_name.match(file_name_regex);
+		if (match && match.groups) {
 			const subjectCode = match.groups.subject_code;
 			const specializationCode = match.groups.specialization_code || "";
 			const examType = match.groups.type;
@@ -283,25 +328,119 @@ import Card from "@/components/Card.astro";
 			const examDate = match.groups.date || "";
 			const examSet = match.groups.set || "";
 
-			document.getElementById("subjectCode").value =
+			(document.getElementById("subjectCode") as HTMLInputElement).value =
 				subjectCode.toLowerCase();
-			document.getElementById("specializationCode").value =
-				specializationCode;
-			document.querySelector(
-				`input[name="exam_type"][value="${examType}"]`,
+			(
+				document.getElementById(
+					"specializationCode",
+				) as HTMLInputElement
+			).value = specializationCode;
+			(
+				document.querySelector(
+					`input[name="exam_type"][value="${examType}"]`,
+				) as HTMLInputElement
 			).checked = true;
-			document.getElementById("backExam").checked = backExam === "back";
-			document.getElementById("examYear").value = examYear;
+			(document.getElementById("backExam") as HTMLInputElement).checked =
+				backExam === "back";
+			(document.getElementById("examYear") as HTMLInputElement).value =
+				examYear;
+
 			if (examMonth) {
-				document.getElementById("examMonth").value = examMonth;
+				(
+					document.getElementById("examMonth") as HTMLInputElement
+				).value = examMonth;
 			}
+
 			if (examDate) {
-				document.getElementById("examDate").value =
-					`${examYear}-${examMonth}-${examDate}`;
+				const monthMap: { [key: string]: string } = {
+					jan: "01",
+					feb: "02",
+					mar: "03",
+					apr: "04",
+					may: "05",
+					jun: "06",
+					jul: "07",
+					aug: "08",
+					sep: "09",
+					oct: "10",
+					nov: "11",
+					dec: "12",
+				};
+
+				const formattedDate = `${examYear}-${monthMap[examMonth.toLowerCase()]}-${examDate.padStart(2, "0")}`;
+				(
+					document.getElementById("examDate") as HTMLInputElement
+				).value = formattedDate;
 			}
-			document.getElementById("examSet").value = examSet;
+			(document.getElementById("examSet") as HTMLInputElement).value =
+				examSet;
 
 			updateFilename();
 		}
 	}
+
+	import * as PDFJS from "pdfjs-dist/build/pdf";
+
+	window.PDFJS = PDFJS;
+
+	function renderPreview(file: File) {
+		const pdfPreviewCanvas = document.getElementById(
+			"pdfPreview",
+		) as HTMLCanvasElement;
+		const canvasContext = pdfPreviewCanvas.getContext("2d");
+
+		pdfPreviewCanvas.style.display = "block";
+
+		var fileReader = new FileReader();
+
+		fileReader.onload = async function () {
+			const pdfData = new Uint8Array(this.result as ArrayBuffer);
+
+			PDFJS.GlobalWorkerOptions.workerSrc =
+				"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.mjs";
+
+			try {
+				// Load the PDF
+				const pdf = await PDFJS.getDocument({ data: pdfData }).promise;
+
+				// Get the first page
+				const page = await pdf.getPage(1);
+
+				// Set scale for rendering
+				const viewport = page.getViewport({ scale: 1.5 });
+				pdfPreviewCanvas.width = viewport.width;
+				pdfPreviewCanvas.height = viewport.height;
+
+				// Render the page
+				const renderContext = {
+					canvasContext,
+					viewport,
+				};
+				await page.render(renderContext).promise;
+			} catch (error) {
+				console.error("Error rendering PDF:", error);
+			}
+		};
+
+		fileReader.readAsArrayBuffer(file);
+	}
+
+	function onFileUpload() {
+		const fileInput = document.getElementById(
+			"file-input",
+		) as HTMLInputElement;
+
+		if (fileInput && fileInput.files && fileInput.files[0]) {
+			const file = fileInput.files[0];
+
+			console.log(file);
+
+			uploadedFileFilename(file.name);
+			renderPreview(file);
+		}
+	}
+
+	(
+		document.getElementById("file-input") as HTMLInputElement
+	).addEventListener("change", onFileUpload);
 </script>
